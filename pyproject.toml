@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "sigh_detection"
+version = "0.1.0"
+description = ""
+authors = ["Egor Osinkin <egor.os.ink@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.9.*"
+clearml = ">=1.10.4"
+lightning-flash = {version = ">=0.8.2", extras=["image"]}
+omegaconf = ">=2.3.0"
+pydantic = ">=2.1.1"
+albumentations = ">=1.0.1"
+tensorboard = "*"
+icevision = "^0.12.0"
+sahi = ">=0.9.0, <0.11.0"  # This range of versions is valid for `icevision`.
+setuptools = "59.5.0"  # Required for `pytorch_lighting < 2.0.0`
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = ">=3.2.1"
+wemake-python-styleguide = ">=0.17.0"
+vulture = ">=2.7"
+pytest = ">=7.3.1"
+
+[tool.vulture]
+min_confidence = 80
+paths = ["src"]
+ignore_names = ["args", "kwargs", "batch_idx", "pl_module"]
+sort_by_size = true
+verbose = false
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
