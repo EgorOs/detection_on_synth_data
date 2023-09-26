@@ -1,6 +1,6 @@
 project_name: synth_data_obj_det
 experiment_name: obj_det
-track_in_clearml: false
+track_in_clearml: true
 trainer_config:
   min_epochs: 7
   max_epochs: 100
@@ -14,8 +14,8 @@ trainer_config:
   detect_anomaly: false
 data_config:
   img_size:
-  - 224
-  - 224
-  batch_size: 48
+  - 512
+  - 512
+  batch_size: 32
   num_workers: 0
   pin_memory: true

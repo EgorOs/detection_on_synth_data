@@ -68,9 +68,6 @@ class VisualizeBatch(Callback):
 
     def on_train_epoch_start(self, trainer: Trainer, pl_module: LightningModule):  # noqa: WPS210
         if trainer.current_epoch % self.every_n_epochs == 0:
-            # batch = next(iter(trainer.train_dataloader))['input'][0]
-            # images, targets = batch
-
             batch = next(iter(trainer.train_dataloader))
             visualizations = prepare_batch_visualizations(batch)
 
@@ -92,31 +89,6 @@ class VisualizeBatch(Callback):
                 img_tensor=grid,
                 global_step=trainer.global_step,
             )
-
-
-# class VisualizeDetectionsCallback(pl.Callback):
-#     def __init__(self, every_n_epochs=1, top_k=3):
-#         super().__init__()
-#         self.every_n_epochs = every_n_epochs
-#         self.top_k = top_k
-#
-#     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: DetectionLightningModule):
-#         if trainer.current_epoch % self.every_n_epochs == 0:
-#             batch: tuple = next(iter(trainer.val_dataloaders))
-#             with torch.no_grad():
-#                 with override_training_status(pl_module.model.model, training=False):
-#                     preds = pl_module(batch)
-#
-#             visualizations: List[np.ndarray] = []
-#             for image, pred in zip(batch[0], preds):
-#                 image = denormalize(tensor_to_cv_image(image))
-#                 visualizations.append(draw_top_k_predictions(image, pred, self.top_k))
-#
-#             trainer.logger.experiment.add_image(
-#                 'Val set predictions',
-#                 cv_image_to_tensor(grid_from_images(visualizations), normalize=False).to(torch.uint8),
-#                 global_step=trainer.global_step,
-#             )
 
 
 def prepare_batch_visualizations(batch) -> List[Tensor]:

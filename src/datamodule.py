@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
 
@@ -46,6 +47,7 @@ class SynthFilesInput(ClassificationInputMixin, ImageFilesInput):
         ]
 
     def load_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        sample = deepcopy(sample)
         sample = super().load_sample(sample)
         if DataKeys.TARGET in sample:
             sample[DataKeys.TARGET]['labels'] = [
@@ -55,7 +57,6 @@ class SynthFilesInput(ClassificationInputMixin, ImageFilesInput):
 
 
 class SignsDatamodule(ObjectDetectionData):
-    # input_transform_cls = IceVisionInputTransform
 
     def on_after_batch_transfer(self, batch: Any, dataloader_idx: int) -> Any:
         if getattr(self, "trainer", None) is None:
@@ -121,7 +122,7 @@ class SignsDatamodule(ObjectDetectionData):
             ),
             transform=transform,
             transform_kwargs=transform_kwargs,
-            sampler=RandomSampler(train_input, replacement=True, num_samples=500),
+            sampler=RandomSampler(train_input, replacement=True, num_samples=400),  # TODO: parametrize
             **data_module_kwargs,
         )
 

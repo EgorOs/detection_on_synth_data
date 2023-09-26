@@ -13,16 +13,21 @@ from src.datamodule import DataSplit, SignsDatamodule
 from src.lightning_module import SignDetectorModule
 
 
+DATA_PATH = Path('/home/egor/Projects/detection_on_synth_data/dataset/35')
+
+
 def train(cfg: ExperimentConfig):
     pl.seed_everything(0)
 
     datamodule = SignsDatamodule.from_synth_data(
-        images_path=Path('/home/egor/Projects/detection_on_synth_data/dataset/35/images'),
+        images_path=DATA_PATH / 'images',
         transform_kwargs={'data_config': cfg.data_config},
         batch_size=cfg.data_config.batch_size,
     )
 
-    # model = SignDetectorModule(head="efficientdet", backbone="d0", num_classes=datamodule.num_classes, image_size=512)
+    # model = SignDetectorModule(
+    #     head="efficientdet", backbone="d0", pretrained=True, num_classes=datamodule.num_classes, image_size=cfg.data_config.img_size
+    # )
     model = SignDetectorModule(
         head='retinanet',
         backbone='resnet18_fpn',
@@ -37,13 +42,13 @@ def train(cfg: ExperimentConfig):
     ]
     callbacks += [
         PreviewRawImages(
-            Path('/home/egor/Projects/detection_on_synth_data/dataset/35'), img_pattern='*.png', split=split,
+            DATA_PATH, img_pattern='*.png', split=split,
         )
         for split in (DataSplit.TRAIN, DataSplit.VAL, DataSplit.TEST)
     ]
 
     if cfg.track_in_clearml:
-        callbacks += [ClearMLTracking()]
+        callbacks += [ClearMLTracking(cfg=cfg)]
 
     trainer = flash.Trainer(**dict(cfg.trainer_config), accelerator='auto', callbacks=callbacks)
     # trainer.finetune(model, datamodule=datamodule, strategy="freeze")

@@ -1,10 +1,10 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable
 import numpy as np
 import albumentations as albu
 from albumentations.pytorch import ToTensorV2
 from flash import InputTransform, RunningStage, DataKeys
-from flash.core.integrations.icevision.transforms import IceVisionTransformAdapter
 from torch import Tensor
 
 from src.config import DataConfig
@@ -20,6 +20,8 @@ class SynthDataTransform(InputTransform):
         self._valid_transforms = get_det_valid_transforms(*self.data_config.img_size)
 
     def _per_sample_transform(self, sample: dict, stage: RunningStage) -> dict:
+        sample = deepcopy(sample)
+
         transform_fn = self._train_transforms if stage is RunningStage.TRAINING else self._valid_transforms
         img = np.array(sample['input'])
         target = sample['target']
@@ -47,13 +49,11 @@ class SynthDataTransform(InputTransform):
 def get_det_train_transforms(img_width: int, img_height: int) -> albu.Compose:
     return albu.Compose(
         [
-            albu.HorizontalFlip(p=0.5),
-            albu.VerticalFlip(p=0.5),
             albu.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.5),
             albu.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.5),
             albu.Rotate(limit=30),
             albu.GaussianBlur(),
-            albu.Resize(height=img_height, width=img_width, always_apply=True),
+            albu.RandomResizedCrop(height=img_height, width=img_width, always_apply=True),
         ],
         bbox_params=albu.BboxParams(
             format='pascal_voc',
