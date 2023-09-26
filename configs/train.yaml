@@ -1,0 +1,21 @@
+project_name: synth_data_obj_det
+experiment_name: obj_det
+track_in_clearml: false
+trainer_config:
+  min_epochs: 7
+  max_epochs: 100
+  check_val_every_n_epoch: 3
+  log_every_n_steps: 10
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: false
+  fast_dev_run: false
+  default_root_dir: null
+  detect_anomaly: false
+data_config:
+  img_size:
+  - 224
+  - 224
+  batch_size: 48
+  num_workers: 0
+  pin_memory: true

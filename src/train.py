@@ -1,59 +1,57 @@
+import os
 from pathlib import Path
 
 import flash
 import pytorch_lightning as pl
-from flash.image import ObjectDetectionData, ObjectDetector
 from pytorch_lightning.callbacks import LearningRateMonitor
 
-from src.callbacks.debug import VisualizeBatch
-from src.datamodule import SignsDatamodule
+from src.callbacks.debug import PreviewRawImages, VisualizeBatch
+from src.callbacks.experiment_tracking import ClearMLTracking
+from src.config import ExperimentConfig
+from src.constants import PROJECT_ROOT
+from src.datamodule import DataSplit, SignsDatamodule
+from src.lightning_module import SignDetectorModule
 
 
-def train():
+def train(cfg: ExperimentConfig):
     pl.seed_everything(0)
 
-    datamodule = ObjectDetectionData.from_coco(
-        train_folder='data/coco128/images/train2017/',
-        train_ann_file='data/coco128/annotations/instances_train2017.json',
-        val_split=0.1,
-        transform_kwargs={'image_size': 512},
-        batch_size=16,
-    )
-
     datamodule = SignsDatamodule.from_synth_data(
-        images_path=Path('/home/egor/Projects/detection_on_synth_data/dataset/25/images'),
-        transform_kwargs={'image_size': 512},
-        batch_size=16,
+        images_path=Path('/home/egor/Projects/detection_on_synth_data/dataset/35/images'),
+        transform_kwargs={'data_config': cfg.data_config},
+        batch_size=cfg.data_config.batch_size,
     )
 
-    # model = ObjectDetector(head="efficientdet", backbone="d0", num_classes=datamodule.num_classes, image_size=512)
-    model = ObjectDetector(
-        head='retinanet', backbone='resnet18_fpn', pretrained=True, num_classes=datamodule.num_classes, image_size=512,
+    # model = SignDetectorModule(head="efficientdet", backbone="d0", num_classes=datamodule.num_classes, image_size=512)
+    model = SignDetectorModule(
+        head='retinanet',
+        backbone='resnet18_fpn',
+        pretrained=True,
+        num_classes=datamodule.num_classes,
+        image_size={'image_size': cfg.data_config.img_size},
     )
 
-    # FIXME need sampler
     callbacks = [
-        VisualizeBatch(every_n_epochs=2),
+        VisualizeBatch(every_n_epochs=1),
         LearningRateMonitor(logging_interval='step'),
     ]
-    trainer = flash.Trainer(accelerator='auto', max_epochs=10, callbacks=callbacks, log_every_n_steps=5)
+    callbacks += [
+        PreviewRawImages(
+            Path('/home/egor/Projects/detection_on_synth_data/dataset/35'), img_pattern='*.png', split=split,
+        )
+        for split in (DataSplit.TRAIN, DataSplit.VAL, DataSplit.TEST)
+    ]
+
+    if cfg.track_in_clearml:
+        callbacks += [ClearMLTracking()]
+
+    trainer = flash.Trainer(**dict(cfg.trainer_config), accelerator='auto', callbacks=callbacks)
     # trainer.finetune(model, datamodule=datamodule, strategy="freeze")
     trainer.fit(model, datamodule=datamodule)
-
-    # datamodule = ObjectDetectionData.from_files(
-    #     predict_files=[
-    #         "/home/egor/Projects/detection_on_synth_data/sample_dataset/images/test/6.png",
-    #         "/home/egor/Projects/detection_on_synth_data/sample_dataset/images/test/7.png",
-    #         "/home/egor/Projects/detection_on_synth_data/sample_dataset/images/test/8.png",
-    #     ],
-    #     transform_kwargs={"image_size": 512},
-    #     batch_size=4,
-    # )
-    # predictions = trainer.predict(model, datamodule=datamodule)
-    # print(predictions)
 
     trainer.save_checkpoint('object_detection_model.pt')
 
 
 if __name__ == '__main__':
-    train()
+    cfg_path = os.getenv('TRAIN_CFG_PATH', PROJECT_ROOT / 'configs' / 'train.yaml')
+    train(cfg=ExperimentConfig.from_yaml(cfg_path))
