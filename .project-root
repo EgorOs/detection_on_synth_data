@@ -1,0 +1,6 @@
+Do not delete: required to determine the root directory of the project.
+
+Use cases:
+* Help mmdet to find the root dir.
+* Root dir is being added to "PYTHONPATH" during training script execution. It allows to ClearML agent to
+  import project packages on remote machine.
