@@ -1,5 +1,5 @@
 default_scope = 'mmdet'
-max_epochs = 150
+max_epochs = 100
 base_lr = 0.003
 val_interval = 5
 log_level = 'INFO'

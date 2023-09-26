@@ -22,6 +22,7 @@ openmim = "^0.3.7"
 torchinfo = ">=1.8.0"
 frozendict = ">=2.3.8"
 yapf = "<=0.40.1"
+gdown = "^4.7.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.2.1"
