@@ -11,3 +11,4 @@ lightning_logs
 
 # DS_Store (MacOS)
 .DS_Store
+/src/mm_detection/mmdet_training_results/

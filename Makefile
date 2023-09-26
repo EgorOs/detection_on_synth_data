@@ -1,6 +1,6 @@
 .PHONY: *
 
-PYTHON_EXEC := python3.9
+PYTHON_EXEC := python3.10
 DROPBOX_DATASET := .dropbox_dataset
 
 CLEARML_PROJECT_NAME := obj_det_on_synth_data
@@ -11,6 +11,7 @@ setup_ws:
 	poetry env use $(PYTHON_EXEC)
 	poetry install
 	poetry run pre-commit install
+	./mmdet_install.sh  # TODO: replace with poetry if possible.
 	@echo
 	@echo "Virtual environment has been created."
 	@echo "Path to Python executable:"
@@ -32,4 +33,4 @@ setup_ws:
 
 
 run_training:
-	poetry run $(PYTHON_EXEC) -m src.train
+	poetry run $(PYTHON_EXEC) -m src.mm_detection.train
